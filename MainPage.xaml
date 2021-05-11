@@ -1,0 +1,56 @@
+﻿<Page x:Class="TransportRental.MainPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:localization="clr-namespace:TransportRental.Localization"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="450"
+      Title="MainPage" ShowsNavigationUI="False">
+
+    <Grid MinHeight="450" MaxHeight="450" MinWidth="450" MaxWidth="450">
+        <Grid.Background>
+            <ImageBrush ImageSource="Resources/background.jpg"></ImageBrush>
+        </Grid.Background>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="0.8*"></RowDefinition>
+            <RowDefinition Height="0.2*"></RowDefinition>
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+
+        <Grid Row="0">
+            <Label Content="{localization:Localization Key=MainPageTitle}" FontSize="35" Foreground="White" HorizontalContentAlignment="Center" Margin="0, 20, 0, 0"></Label>
+
+            <ListBox Name="VehiclesListBox" Width="412" Height="150" 
+                 HorizontalAlignment="Center" 
+                 VerticalAlignment="Center" 
+                 Grid.Column="0"
+                 FontFamily="Calibri" FontSize="18" FontWeight="ExtraLight">
+            </ListBox>
+        </Grid>
+
+        <Grid Row="1">
+            <Button Name="InfoPageButton" Width="150" Height="50" 
+                    HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                    Grid.Column="0"
+                    VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="0, 0, 12, 12" Content="{localization:Localization Key=Information}">
+            </Button>
+
+            <Button Name="BackButton" Width="150" Height="50" 
+                    HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                    Grid.Column="0"
+                    VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="0, 0, 288, 12" Content="{localization:Localization Key=Back}">
+            </Button>
+
+        </Grid>
+
+        <Button Name="RemoveTransportButton" Width="150" Height="50" 
+                HorizontalAlignment="Right" VerticalAlignment="Bottom" Grid.Row="0"
+                VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="0, 0, 12, 0" Content="{localization:Localization Key=RemoveTransport}">
+        </Button>
+    </Grid>
+</Page>

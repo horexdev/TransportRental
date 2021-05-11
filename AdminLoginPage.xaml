@@ -1,0 +1,34 @@
+﻿<Page x:Class="TransportRental.AdminLoginPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:localization="clr-namespace:TransportRental.Localization"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="450"
+      Title="AdminLoginPage">
+
+    <Grid MinHeight="450" MaxHeight="450" MinWidth="450" MaxWidth="450">
+        <Label Content="{localization:Localization Key=AdminPanelTitle}" FontSize="35" Margin="0, 50, 0, 0" HorizontalAlignment="Center" VerticalAlignment="Top"></Label>
+
+        <Label Content="{localization:Localization Key=Login}" FontSize="20" Margin="0, 125, 0, 0" HorizontalAlignment="Center" VerticalAlignment="Top"></Label>
+        <Label Content="{localization:Localization Key=Password}" FontSize="20" Margin="0, 200, 0, 0" HorizontalAlignment="Center" VerticalAlignment="Top"></Label>
+
+        <TextBox Name="LoginTextBox" Width="200" Height="25"
+                 HorizontalAlignment="Center" VerticalAlignment="Center"
+                 HorizontalContentAlignment="Left" VerticalContentAlignment="Center" Margin="0, 0, 0, 90"></TextBox>
+
+        <TextBox Name="PasswordTextBox" Width="200" Height="25"
+                 HorizontalAlignment="Center" VerticalAlignment="Center"
+                 HorizontalContentAlignment="Left" VerticalContentAlignment="Center" Margin="0, 50, 0, 0">
+        </TextBox>
+
+        <Button Name="SignInButton" Content="{localization:Localization Key=SignIn}" Width="150" Height="50" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0, 165, 0, 0"></Button>
+
+        <Button Name="BackButton" Width="150" Height="50" 
+                HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Grid.Column="0"
+                VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="0, 0, 288, 12" Content="{localization:Localization Key=Back}" Visibility="Visible">
+        </Button>
+    </Grid>
+</Page>

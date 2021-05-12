@@ -18,8 +18,11 @@
         <Label Content="{localization:Localization Key=Transport}" Margin="0, 0, 190, 160" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" Foreground="White"></Label>
         <Label Content="{localization:Localization Key=Price}" Margin="0, 0, 190, 80" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" Foreground="White"></Label>
         <Label Content="{localization:Localization Key=Client}" Margin="0, 0, 190, 0" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" Foreground="White"></Label>
-        <Label Content="{localization:Localization Key=ClientCount}" Margin="215, 150, 0, 0" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" Foreground="White" Name="ClientCountText"></Label>
-        <Label Content="0" Margin="340, 150, 0, 0" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" Foreground="White" Name="ClientCount"></Label>
+        <Label Content="{localization:Localization Key=ClientsList}" Margin="0, 0, 50, 60" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="14" Foreground="White"></Label>
+        <Label Content="{localization:Localization Key=ClientCount}" Margin="0, 100, 25, 0" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="14" Foreground="White" Name="ClientCountText"></Label>
+        <Label Content="{localization:Localization Key=ActiveClientCount}" Margin="0, 150, 25, 0" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="14" Foreground="White" Name="ActiveClientCountText"></Label>
+        <Label Content="0" Margin="415, 100, 0, 0" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" Foreground="White" Name="ClientCount"></Label>
+        <Label Content="0" Margin="415, 150, 0, 0" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" Foreground="White" Name="ActiveClientCount"></Label>
 
         <ComboBox Width="100" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" 
                   HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Name="VehiclesComboBox" Margin="0, 0, 0, 160">
@@ -44,5 +47,7 @@
         <Button Width="65" Height="25" HorizontalAlignment="Center" VerticalAlignment="Bottom" Content="{localization:Localization Key=Settings}" Margin="0, 0, 48, 12" Name="SettingsButton"></Button>
 
         <Button Width="100" Height="25" Content="{localization:Localization Key=AddClient}" HorizontalAlignment="Center" VerticalAlignment="Center" Name="CreateClientButton"></Button>
+
+        <ComboBox Width="100" Height="25" HorizontalAlignment="Right" VerticalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="0, 0, 25, 0" Name="ClientsComboBox"/>
     </Grid>
 </Page>

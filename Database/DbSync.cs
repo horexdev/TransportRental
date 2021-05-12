@@ -61,6 +61,15 @@ namespace TransportRental.Database {
             return db.Clients.FirstOrDefault(c => c.FullName == fullName);
         }
 
+        public static void Client_Update(Client client) {
+            using var db = new ServerDbContext();
+
+            if (client == null) return;
+
+            db.Clients.Update(client);
+            db.SaveChanges();
+        }
+
         public static void Client_Remove(Client client)
         {
             using var db = new ServerDbContext();
@@ -75,7 +84,7 @@ namespace TransportRental.Database {
         /// Возвращает список клиентов
         /// </summary>
         /// <returns></returns>
-        public static ICollection<Client> Client_Get() {
+        public static List<Client> Client_Get() {
             using var db = new ServerDbContext();
 
             return db.Clients.ToList();
@@ -143,7 +152,7 @@ namespace TransportRental.Database {
         /// Возвращает список автомобилей
         /// </summary>
         /// <returns></returns>
-        public static ICollection<Car.Car> Car_Get() {
+        public static List<Car.Car> Car_Get() {
             using var db = new ServerDbContext();
 
             return db.Transports.ToList();
@@ -153,7 +162,7 @@ namespace TransportRental.Database {
         /// Возвращает список арендованных авто
         /// </summary>
         /// <returns></returns>
-        public static ICollection<Car.RentedCar> RentedCar_Get() {
+        public static List<Car.RentedCar> RentedCar_Get() {
             using var db = new ServerDbContext();
 
             return db.RentedTransports.ToList();

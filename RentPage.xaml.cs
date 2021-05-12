@@ -2,7 +2,10 @@
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using TransportRental.Car;
 using TransportRental.Database;
+using TransportRental.Model;
 
 namespace TransportRental {
     /// <summary>
@@ -16,16 +19,19 @@ namespace TransportRental {
             Main.MainPage ??= new MainPage();
 
             VehiclesComboBox.Items.Add(new ComboBoxItem { Content = "-" });
+            ClientsComboBox.Items.Add(new ComboBoxItem { Content = "-" });
 
             Main.LoadAllData();
             Main.InitializeAdminAccount();
 
             VehiclesComboBox.SelectedItem = VehiclesComboBox.Items[0];
+            ClientsComboBox.SelectedItem = ClientsComboBox.Items[0];
 
             MainPageButton.Click += MainPageButton_Click;
             RentVehicleButton.Click += RentVehicleButton_Click;
             AdminPanelButton.Click += AdminPanelButton_Click;
             VehiclesComboBox.SelectionChanged += VehiclesComboBox_SelectionChanged;
+            ClientsComboBox.SelectionChanged += ClientsComboBox_SelectionChanged;
             EditRentPriceCheckBox.Checked += EditRentPriceCheckBox_Checked;
             EditRentPriceCheckBox.Unchecked += EditRentPriceCheckBox_Unchecked;
             LogoutButton.Click += LogoutButton_Click;
@@ -44,10 +50,11 @@ namespace TransportRental {
         }
 
         private void LogoutButton_Click(object sender, RoutedEventArgs e) {
-            if (Main.MainAdmin.IsLogged) {
-                Main.MainAdmin.IsLogged = false;
-                LogoutButton.Visibility = Visibility.Hidden;
-            }
+            if (!Main.MainAdmin.IsLogged) return;
+
+            Main.MainAdmin.IsLogged = false;
+
+            LogoutButton.Visibility = Visibility.Hidden;
         }
 
         private void AdminPanelButton_Click(object sender, RoutedEventArgs e) {
@@ -73,13 +80,15 @@ namespace TransportRental {
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void RentVehicleButton_Click(object sender, RoutedEventArgs e) {
-            var comboBoxItem = GetSelectedComboBoxItem();
+            var comboBoxItem = GetSelectedComboBoxItem(VehiclesComboBox);
+            var clientsComboBoxItem = GetSelectedComboBoxItem(ClientsComboBox);
 
             if (comboBoxItem == null) return;
 
             if (comboBoxItem.Content.ToString() == "-") return;
 
             comboBoxItem.IsEnabled = false;
+            clientsComboBoxItem.IsEnabled = false;
 
             var vehicle = Main.TryGetVehicle(comboBoxItem.Content.ToString());
 
@@ -90,13 +99,43 @@ namespace TransportRental {
                 : vehicle.BasicRent;
 
             VehiclesComboBox.SelectedItem = VehiclesComboBox.Items[0];
+            ClientsComboBox.SelectedItem = ClientsComboBox.Items[0];
 
             Main.MainPage.AddRentVehicle(vehicle);
 
             vehicle.IsRented = true;
 
-            Main.Clients.Add(Main.ExpectedClients.Dequeue());
-            Main.RentPage.ClientCount.Content = Main.Clients.Count.ToString();
+            Client client;
+
+            if (Main.ExpectedClients.Count == 0) {
+                client = Main.Clients.FirstOrDefault(c => c.FullName == clientsComboBoxItem.Content.ToString());
+
+                if (client == null)
+                {
+                    MessageBox.Show("Техническая ошибка. \r\r\nОбратитесь к системному администратору \r\r\nClient null", "", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                    return;
+                }
+
+                var rentedTransport = new RentedCar(client, 0, 0, 0, 5);
+
+                client.RentedVehicle = rentedTransport;
+                client.RentedVehicle.LicensePlate = vehicle.LicensePlate;
+                client.RentedVehicle.Car = vehicle;
+
+                Main.RentedCars.Add(rentedTransport);
+
+                DbSync.RentedCar_Update(rentedTransport);
+            }
+            else {
+                client = Main.ExpectedClients.Dequeue();
+
+                Main.Clients.Add(client);
+            }
+
+            Main.ActiveClients.Add(client);
+
+            Main.UpdateClientsCount();
 
             RentVehicleButton.IsEnabled = false;
             CreateClientButton.IsEnabled = true;
@@ -105,35 +144,8 @@ namespace TransportRental {
 
             var timerName = vehicle.Name + "_" + vehicle.LicensePlate;
 
-            Timer.Timer.StartTimer(timerName, 900, () =>
-            {
-                var rentedCar = Main.RentedCars.FirstOrDefault(c => c.LicensePlate == vehicle.LicensePlate);
-
-                if (rentedCar == null)
-                {
-                    Timer.Timer.StopTimer(timerName);
-                    MessageBox.Show("Таймер прекратил свою работу. \n\rNull Reference Exception", "", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                var leaseTerm = rentedCar.LeaseTerm;
-                rentedCar.TimeLeft = leaseTerm.Subtract(DateTime.Now);
-
-                if (rentedCar.TimeLeft.Days > 0
-                    || rentedCar.TimeLeft.Hours > 0
-                    || rentedCar.TimeLeft.Minutes > 0
-                    || rentedCar.TimeLeft.Seconds > 0) return;
-
-                DbSync.RentedCar_Update(rentedCar);
-                Main.RemoveRentedTransport(rentedCar);
-
-                Timer.Timer.StopTimer(timerName);
-                MessageBox.Show($"Аренда автомобиля {vehicle.Name} с номерами {vehicle.LicensePlate} закончилась!", "Информация");
-                if (Main.CheckIsCarBack(vehicle))
-                {
-                    MainPage.SetRentedFlag(vehicle, false);
-                }
-            });
+            // Запускаем таймер
+            Main.StartCarTimer(timerName, vehicle);
         }
 
         /// <summary>
@@ -142,25 +154,51 @@ namespace TransportRental {
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void VehiclesComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-            var comboxBoxItem = GetSelectedComboBoxItem();
+            var comboBoxItem = GetSelectedComboBoxItem(VehiclesComboBox);
 
-            if (comboxBoxItem == null) return;
+            if (comboBoxItem == null) 
+                return;
 
-            if(comboxBoxItem.Content.ToString() == "-") {
+            if(comboBoxItem.Content.ToString() == "-") {
+                RentVehicleButton.IsEnabled = false;
+
                 if (EditRentPriceCheckBox.IsEnabled) {
                     EditRentPriceCheckBox.IsEnabled = false;
                     EditRentPriceCheckBox.IsChecked = false;
+
                     RentPriceTextBox.Text = "";
+
                     return;
                 }
             }
+            else {
+                RentVehicleButton.IsEnabled = GetSelectedComboBoxItem(ClientsComboBox).Content.ToString() != "-";
+            }
 
-            var vehicle = Main.TryGetVehicle(comboxBoxItem.Content.ToString());
+            var vehicle = Main.TryGetVehicle(comboBoxItem.Content.ToString());
 
-            if (vehicle == null) return;
+            if (vehicle == null) 
+                return;
 
             EditRentPriceCheckBox.IsEnabled = true;
             RentPriceTextBox.Text = vehicle.BasicRent.ToString();
+        }
+
+        private void ClientsComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+            var comboBoxItem = GetSelectedComboBoxItem(ClientsComboBox);
+
+            if (comboBoxItem == null) 
+                return;
+
+            if (comboBoxItem.Content.ToString() != "-") {
+                CreateClientButton.IsEnabled = false;
+
+                RentVehicleButton.IsEnabled = GetSelectedComboBoxItem(VehiclesComboBox).Content.ToString() != "-";
+            }
+            else {
+                RentVehicleButton.IsEnabled = false;
+                CreateClientButton.IsEnabled = true;
+            }
         }
 
         /// <summary>
@@ -176,8 +214,8 @@ namespace TransportRental {
         /// Получить выбранный элемент в выпадающем списке
         /// </summary>
         /// <returns></returns>
-        private ComboBoxItem GetSelectedComboBoxItem() {
-            return (ComboBoxItem) VehiclesComboBox.SelectedItem;
+        private ComboBoxItem GetSelectedComboBoxItem(Selector comboBox) {
+            return (ComboBoxItem) comboBox.SelectedItem;
         }
     }
 }

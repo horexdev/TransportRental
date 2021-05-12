@@ -2,11 +2,9 @@
 using System.Windows;
 using System.Windows.Controls;
 using TransportRental.Database;
+using TransportRental.Model;
 
 namespace TransportRental {
-    /// <summary>
-    /// Interaction logic for MainPage.xaml
-    /// </summary>
     public partial class MainPage : Page {
         public MainPage() {
             InitializeComponent();
@@ -16,17 +14,31 @@ namespace TransportRental {
             BackButton.Click += BackButton_Click;
         }
 
-        public static void SetRentedFlag(Car.Car veh, bool flag)
+        public static void SetRentedFlag(Car.Car veh, Client client, bool flag)
         {
             foreach (var item in Main.RentPage.VehiclesComboBox.Items)
             {
                 var comboBoxItem = (ComboBoxItem)item;
 
-                if (comboBoxItem.Content.ToString() != veh.Name || comboBoxItem.IsEnabled) continue;
+                if (comboBoxItem.Content.ToString() != veh.Name || comboBoxItem.IsEnabled) 
+                    continue;
 
                 comboBoxItem.IsEnabled = !flag;
                 veh.IsRented = flag;
+
                 DbSync.Car_Update(veh);
+
+                break;
+            }
+
+            foreach (var item in Main.RentPage.ClientsComboBox.Items) {
+                var comboBoxItem = (ComboBoxItem)item;
+
+                if (comboBoxItem.Content.ToString() != client.FullName || comboBoxItem.IsEnabled)
+                    continue;
+
+                comboBoxItem.IsEnabled = !flag;
+
                 break;
             }
         }
@@ -36,14 +48,12 @@ namespace TransportRental {
 
             if (veh == null) return;
 
-            var client = Main.TryGetClient(veh.Name);
+            var client = Main.Clients.FirstOrDefault(c => c.RentedVehicle.Car.Name == veh.Name);
 
             if (client == null) return;
 
-            SetRentedFlag(veh, false);
+            SetRentedFlag(veh, client, false);
 
-            //Main.Clients.Remove(client);
-            //Main.RentPage.ClientCount.Content = Main.Clients.Count.ToString();
             Main.RemoveRentedTransport(veh);
         }
 
@@ -68,7 +78,7 @@ namespace TransportRental {
 
             if (veh == null) return;
 
-            var client = Main.TryGetClient(veh.Name);
+            var client = Main.ActiveClients.FirstOrDefault(c => c.RentedVehicle.Car.Name == veh.Name);
 
             if (client == null) return;
 

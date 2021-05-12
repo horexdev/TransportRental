@@ -28,6 +28,8 @@ namespace TransportRental.Timer {
             timer.Start();
 
             Timers.Add(name, timer);
+
+            action.Invoke();
         }
 
         /// <summary>

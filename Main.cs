@@ -31,9 +31,14 @@ namespace TransportRental {
         public static Queue<Client> ExpectedClients = new Queue<Client>();
 
         /// <summary>
-        /// Список текущих клиентов
+        /// Список клиентов
         /// </summary>
         public static List<Client> Clients = new List<Client>();
+
+        /// <summary>
+        /// Список активных клиентов
+        /// </summary>
+        public static List<Client> ActiveClients = new List<Client>();
 
         /// <summary>
         /// Загружает все возможное из БД
@@ -41,9 +46,9 @@ namespace TransportRental {
         public static void LoadAllData() {
             try
             {
-                var cars = DbSync.Car_Get().ToList();
-                var clients = DbSync.Client_Get().ToList();
-                var rentedCars = DbSync.RentedCar_Get().ToList();
+                var cars = DbSync.Car_Get();
+                var clients = DbSync.Client_Get();
+                var rentedCars = DbSync.RentedCar_Get().Where(CheckTimeLeft).ToList();
 
                 foreach (var car in cars)
                 {
@@ -62,7 +67,7 @@ namespace TransportRental {
 
                     var listBoxItem = new ListBoxItem
                     {
-                        Content = rentCar.Car?.Name
+                        Content = $"{rentCar.Car?.Name}[{rentCar.Car?.LicensePlate}]"
                     };
 
                     MainPage.VehiclesListBox.Items.Add(listBoxItem);
@@ -71,10 +76,19 @@ namespace TransportRental {
                 foreach (var client in clients)
                 {
                     client.RentedVehicle = RentedCars.FirstOrDefault(c => c.Client.PassportId == client.PassportId);
+
                     Clients.Add(client);
+
+                    AddItemToClientsComboBox(new ComboBoxItem {Content = client.FullName});
+
+                    if (client.RentedVehicle == null)
+                        continue;
+
+                    ActiveClients.Add(client);
                 }
 
-                RentPage.ClientCount.Content = Clients.Count.ToString();
+                // Обновляем количество клиентов
+                UpdateClientsCount();
             }
             catch(Exception e)
             {
@@ -84,7 +98,8 @@ namespace TransportRental {
                         MessageBoxButton.OK, MessageBoxImage.Error);
 
 
-                if (result == MessageBoxResult.OK || result == MessageBoxResult.None) Process.GetCurrentProcess().Kill();
+                if (result == MessageBoxResult.OK || result == MessageBoxResult.None) 
+                    Process.GetCurrentProcess().Kill();
             }
         }
 
@@ -112,7 +127,7 @@ namespace TransportRental {
             if (selectedItem == null)
                 return null;
 
-            var vehicle = Vehicles.Find(veh => veh.Name == selectedItem.Content.ToString());
+            var vehicle = Vehicles.Find(veh => $"{veh.Name}[{veh.LicensePlate}]" == selectedItem.Content.ToString());
 
             return vehicle;
         }
@@ -124,10 +139,6 @@ namespace TransportRental {
         /// <returns></returns>
         public static Car.Car TryGetVehicle(string name) {
             return name.Length <= 0 ? null : Vehicles.FirstOrDefault(veh => veh.Name == name);
-        }
-
-        public static Client TryGetClient(string vehicleName) {
-            return vehicleName.Length <= 0 ? null : Clients.FirstOrDefault(cl => cl.RentedVehicle.Car.Name == vehicleName);
         }
 
         /// <summary>
@@ -163,30 +174,52 @@ namespace TransportRental {
             RentPage.VehiclesComboBox.Items.Add(item);
         }
 
+        public static void AddItemToClientsComboBox(ComboBoxItem item) {
+            if (item == null) return;
+
+            RentPage.ClientsComboBox.Items.Add(item);
+        }
+
         public static void RemoveRentedTransport(RentedCar rentedCar)
         {
-            if (rentedCar == null) return;
+            if (rentedCar == null) 
+                return;
 
             var listBoxItem = new ListBoxItem();
 
             foreach (var item in MainPage.VehiclesListBox.Items)
             {
                 var listItem = (ListBoxItem) item;
-                if (listItem.Content.ToString() == rentedCar.Car.Name) listBoxItem = listItem;
+
+                if (listItem.Content.ToString() == $"{rentedCar.Car.Name}[{rentedCar.Car.LicensePlate}]") listBoxItem = listItem;
             }
 
-            Main.RentedCars.Remove(rentedCar);
-            Main.MainPage.VehiclesListBox.Items.Remove(listBoxItem);
+            ActiveClients.Remove(rentedCar.Client);
+
+            rentedCar.Client.RentedVehicle = null;
+
+            DbSync.RentedCar_Update(rentedCar);
+
+            UpdateClientsCount();
+
+            RentedCars.Remove(rentedCar);
+            MainPage.VehiclesListBox.Items.Remove(listBoxItem);
         }
 
         public static void RemoveRentedTransport(Car.Car veh)
         {
-            var rentedCar = Main.RentedCars.FirstOrDefault(c => c.LicensePlate == veh.LicensePlate);
+            var rentedCar = RentedCars.FirstOrDefault(c => c.LicensePlate == veh.LicensePlate);
 
             if (rentedCar == null) return;
 
-            Main.RentedCars.Remove(rentedCar);
-            Main.MainPage.VehiclesListBox.Items.Remove((ListBoxItem)Main.MainPage.VehiclesListBox.SelectedItem);
+            if (CheckTimeLeft(rentedCar)) {
+                MessageBox.Show("Машина находится в аренде, ее нельзя убрать", "", MessageBoxButton.OK, MessageBoxImage.Warning);
+
+                return;
+            }
+
+            RentedCars.Remove(rentedCar);
+            MainPage.VehiclesListBox.Items.Remove((ListBoxItem)MainPage.VehiclesListBox.SelectedItem);
         }
 
         public static bool CheckIsCarBack(Car.Car car)
@@ -194,6 +227,59 @@ namespace TransportRental {
             var result = MessageBox.Show($"Машину {car.Name}[{car.LicensePlate}] вернули назад?", "", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
             return result == MessageBoxResult.Yes;
+        }
+
+        public static void StartCarTimer(string timerName, Car.Car vehicle) {
+            Timer.Timer.StartTimer(timerName, 1000, () =>
+            {
+                var rentedCar = RentedCars.FirstOrDefault(c => c.LicensePlate == vehicle.LicensePlate);
+
+                if (rentedCar == null)
+                {
+                    Timer.Timer.StopTimer(timerName);
+                    MessageBox.Show("Таймер прекратил свою работу. \n\rCar Null Reference Exception", "", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                    return;
+                }
+
+                var leaseTerm = rentedCar.LeaseTerm;
+                rentedCar.TimeLeft = leaseTerm.Subtract(DateTime.Now);
+
+                if (CheckTimeLeft(rentedCar)) 
+                    return;
+
+                MessageBox.Show($"Аренда автомобиля {vehicle.Name} с номерами {vehicle.LicensePlate} закончилась!", "Информация");
+
+                if (CheckIsCarBack(vehicle))
+                {
+                    Timer.Timer.StopTimer(timerName);
+
+                    DbSync.RentedCar_Update(rentedCar);
+
+                    RemoveRentedTransport(rentedCar);
+
+                    MainPage.SetRentedFlag(vehicle, rentedCar.Client, false);
+                }
+                else {
+                    rentedCar.LeaseTerm = DateTime.Now.AddSeconds(5);
+
+                    DbSync.RentedCar_Update(rentedCar);
+
+                    MessageBox.Show($"Автомобилю {rentedCar.Car.Name}[{rentedCar.Car.LicensePlate}] дано доп.время в 3 часа.", "", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            });
+        }
+
+        public static bool CheckTimeLeft(RentedCar rentedCar) {
+            return rentedCar.TimeLeft.Days > 0
+                || rentedCar.TimeLeft.Hours > 0
+                || rentedCar.TimeLeft.Minutes > 0
+                || rentedCar.TimeLeft.Seconds > 0;
+        }
+
+        public static void UpdateClientsCount(int activeClients = -1, int clients = -1) {
+            RentPage.ClientCount.Content = clients == -1 ? Clients.Count.ToString() : clients.ToString();
+            RentPage.ActiveClientCount.Content = activeClients == -1 ? ActiveClients.Count.ToString() : activeClients.ToString();
         }
     }
 }

@@ -32,6 +32,8 @@ namespace TransportRental {
                 var name = NameTransportTextBox.Text;
                 var basicPrice = Convert.ToInt32(RentPriceTextBox.Text);
 
+                TypeTransportTextBox.Text = "";
+                LicensePlateTextBox.Text = "";
                 NameTransportTextBox.Text = "";
                 RentPriceTextBox.Text = "";
 

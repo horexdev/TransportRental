@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using TransportRental.Car;
@@ -24,27 +25,21 @@ namespace TransportRental {
 
             if (fullName.Length <= 0 || phoneNumber.Length <= 0 || passportId.Length <= 0) return;
 
+            if (Main.Clients.Count(c =>
+                c.FullName == fullName || c.PassportId == passportId || c.PhoneNumber == phoneNumber) > 0) {
+
+                MessageBox.Show("Клиент с такими данными уже существует!", "", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                return;
+            }
+
             var client = new Client(fullName, phoneNumber, passportId);
 
-            if (!(Main.RentPage.VehiclesComboBox.SelectedItem is ComboBoxItem comboBoxItem)) return;
+            Main.RentPage.ClientsComboBox.Items.Add(new ComboBoxItem { Content = client.FullName});
 
-            var transport = Main.TryGetVehicle(comboBoxItem.Content.ToString());
+            Main.Clients.Add(client);
+            Main.UpdateClientsCount();
 
-            if (transport == null) return;
-
-            var rentedTransport = new RentedCar(client, 0, 0, 0, 1);
-
-            client.RentedVehicle = rentedTransport;
-            client.RentedVehicle.LicensePlate = transport.LicensePlate;
-            client.RentedVehicle.Car = transport;
-
-            Main.ExpectedClients.Enqueue(client);
-            Main.RentedCars.Add(rentedTransport);
-
-            DbSync.RentedCar_Save(rentedTransport);
-
-            Main.RentPage.RentVehicleButton.IsEnabled = true;
-            Main.RentPage.CreateClientButton.IsEnabled = false;
             NavigationService?.Navigate(Main.RentPage);
         }
 

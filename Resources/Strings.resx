@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="ActiveClientCount" xml:space="preserve">
+    <value>Активные клиенты:  </value>
+  </data>
   <data name="AddClient" xml:space="preserve">
     <value>Создать</value>
   </data>
@@ -139,7 +142,10 @@
     <value>Клиент</value>
   </data>
   <data name="ClientCount" xml:space="preserve">
-    <value>Кол-во клиентов: </value>
+    <value>Клиенты:  </value>
+  </data>
+  <data name="ClientsList" xml:space="preserve">
+    <value>Клиенты</value>
   </data>
   <data name="CreateClient" xml:space="preserve">
     <value>Создать клиента</value>

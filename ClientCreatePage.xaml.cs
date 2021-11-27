@@ -16,6 +16,24 @@ namespace TransportRental {
 
             BackButton.Click += BackButton_Click;
             CreateClientButton.Click += CreateClientButton_Click;
+            PhoneNumberTextBox.PreviewTextInput += PhoneNumberTextBox_PreviewTextInput;
+        }
+
+        private void PhoneNumberTextBox_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
+        {
+            if (PhoneNumberTextBox.Text.Contains('+') == false & e.Text[0] != '+')
+                e.Handled = true;
+            else if (PhoneNumberTextBox.Text.Contains('+') && e.Text[0] == '+')
+                e.Handled = true;
+
+            if (char.IsLetter(e.Text[0]))
+                e.Handled = true;
+
+            if (e.Text.Length > 11)
+                e.Handled = true;
+
+            if (PhoneNumberTextBox.Text.Length > 11)
+                e.Handled = true;
         }
 
         private void CreateClientButton_Click(object sender, RoutedEventArgs e) {
@@ -39,6 +57,8 @@ namespace TransportRental {
 
             Main.Clients.Add(client);
             Main.UpdateClientsCount();
+
+            DbSync.Client_Save(client);
 
             NavigationService?.Navigate(Main.RentPage);
         }

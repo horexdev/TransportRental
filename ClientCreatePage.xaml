@@ -19,15 +19,15 @@
         <Label Content="{localization:Localization Key=PassportId}" Margin="0, 0, 210, 0" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" Foreground="White"></Label>
 
         <TextBox Width="100" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" 
-                 HorizontalContentAlignment="Left" VerticalContentAlignment="Center" Name="PassportIdTextBox" Margin="0, 0, 0, 0">
+                 HorizontalContentAlignment="Left" VerticalContentAlignment="Center" Name="PassportIdTextBox" Margin="0, 0, 0, 0" TabIndex="2">
         </TextBox>
 
         <TextBox Width="100" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" 
-                 HorizontalContentAlignment="Left" VerticalContentAlignment="Center" Name="PhoneNumberTextBox" Margin="0, 0, 0, 80">
+                 HorizontalContentAlignment="Left" VerticalContentAlignment="Center" Name="PhoneNumberTextBox" Margin="0, 0, 0, 80" TabIndex="1">
         </TextBox>
 
         <TextBox Width="100" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" 
-                 HorizontalContentAlignment="Left" VerticalContentAlignment="Center" Name="FullNameTextBox" Margin="0, 0, 0, 160">
+                 HorizontalContentAlignment="Left" VerticalContentAlignment="Center" Name="FullNameTextBox" Margin="0, 0, 0, 160" TabIndex="0">
         </TextBox>
 
         <Button Width="150" Height="50" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0, 150, 0, 0" Content="{localization:Localization Key=CreateClient}" Name="CreateClientButton"></Button>

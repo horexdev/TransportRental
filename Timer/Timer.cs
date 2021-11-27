@@ -40,7 +40,7 @@ namespace TransportRental.Timer {
             var timer = Timers.FirstOrDefault(t => t.Key == name).Value;
 
             timer?.Stop();
-			
+
 			Timers.Remove(name);
         }
     }
